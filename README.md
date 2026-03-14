@@ -2,8 +2,6 @@
 
 A modern, highly interactive AI Engineer Portfolio built with Next.js App Router, Tailwind CSS, and Framer Motion. This portfolio showcases not just projects and experience, but live AI capabilities directly in the browser through the custom **AI Lab**.
 
-![Portfolio Preview](./public/profile.png) <!-- Update with actual preview image if available -->
-
 ## 🌟 Key Features
 
 ### 1. Multi-Model AI Lab
