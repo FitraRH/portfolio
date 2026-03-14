@@ -1,0 +1,373 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-bg-primary: #060d1b;
+  --color-bg-secondary: #0a1628;
+  --color-bg-tertiary: #0f1f3a;
+  --color-bg-card: rgba(15, 31, 58, 0.6);
+  --color-bg-card-hover: rgba(20, 40, 75, 0.8);
+
+  --color-accent-primary: #2563eb;
+  --color-accent-secondary: #3b82f6;
+  --color-accent-gold: #d4a843;
+  --color-accent-gold-light: #e8c76a;
+
+  --color-text-primary: #e8edf5;
+  --color-text-secondary: #8b9dc3;
+  --color-text-tertiary: #5a6d8e;
+  --color-text-accent: #3b82f6;
+
+  --color-glass-border: rgba(37, 99, 235, 0.15);
+
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+/* ==================== BASE ==================== */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  line-height: 1.7;
+  overflow-x: hidden;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(37, 99, 235, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(124, 58, 237, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(212, 168, 67, 0.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+::selection {
+  background: rgba(37, 99, 235, 0.3);
+  color: var(--color-text-primary);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ==================== GLASS CARD ==================== */
+.glass-card {
+  background: rgba(15, 31, 58, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-glass-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: var(--color-bg-card-hover);
+  border-color: rgba(37, 99, 235, 0.3);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(37, 99, 235, 0.1);
+}
+
+/* ==================== TEXT GRADIENT ==================== */
+.text-gradient {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-name {
+  background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-accent-secondary) 50%, var(--color-accent-gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ==================== BUTTONS ==================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  border-radius: 9999px;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: white;
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.35);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(37, 99, 235, 0.5);
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: 0.5s;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-text-primary);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-accent-primary);
+  background: rgba(37, 99, 235, 0.1);
+  transform: translateY(-2px);
+}
+
+/* ==================== PARTICLES ==================== */
+.particles-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.5); }
+}
+
+@keyframes scroll-wheel {
+  0%, 100% { opacity: 0; transform: translateY(0); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(12px); }
+}
+
+@keyframes float-indicator {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-8px); }
+}
+
+@keyframes float-tag {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-8px) rotate(1deg); }
+  75% { transform: translateY(8px) rotate(-1deg); }
+}
+
+@keyframes dot-pulse-ring {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* ==================== SECTION LABEL ==================== */
+.section-label {
+  position: relative;
+  padding-left: 3rem;
+}
+
+.section-label::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 2rem;
+  height: 2px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  border-radius: 9999px;
+}
+
+/* ==================== SKILL TAG ==================== */
+.skill-tag {
+  position: relative;
+  overflow: hidden;
+}
+
+.skill-tag::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 9999px;
+}
+
+.skill-tag.revealed::before {
+  width: var(--skill-level, 80%);
+}
+
+/* ==================== TIMELINE ==================== */
+.timeline-line {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, var(--color-accent-primary), var(--color-accent-gold), transparent);
+  opacity: 0.3;
+}
+
+@media (max-width: 1024px) {
+  .timeline-line {
+    left: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .timeline-line {
+    left: 30px;
+  }
+}
+
+/* ==================== SCROLLBAR ==================== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(37, 99, 235, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(37, 99, 235, 0.5);
+}
+
+/* AI Lab Markdown Rendering */
+.md-content {
+  line-height: 1.7;
+  word-break: break-word;
+}
+
+.md-content strong {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.md-content em {
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+.md-content .md-h1 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0.75rem 0 0.4rem;
+  color: var(--color-text-primary);
+}
+
+.md-content .md-h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0.6rem 0 0.3rem;
+  color: var(--color-text-primary);
+}
+
+.md-content .md-h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0.5rem 0 0.25rem;
+  color: var(--color-accent-secondary);
+}
+
+.md-content .md-inline-code {
+  background: rgba(37, 99, 235, 0.12);
+  color: #93c5fd;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.md-content .md-codeblock-wrapper {
+  position: relative;
+  margin: 0.75rem 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  background: rgba(6, 13, 27, 0.9);
+}
+
+.md-content .md-code-lang {
+  display: block;
+  padding: 0.35rem 0.75rem;
+  background: rgba(37, 99, 235, 0.15);
+  color: var(--color-accent-secondary);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.12);
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.md-content .md-codeblock {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0.75rem 1rem;
+  margin: 0;
+  overflow-x: auto;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  font-family: 'Consolas', 'Monaco', monospace;
+  color: #c9d8f0;
+}
+
+.md-content .md-ul,
+.md-content .md-ol {
+  margin: 0.4rem 0;
+  padding-left: 1.4rem;
+}
+
+.md-content .md-ul {
+  list-style-type: disc;
+}
+
+.md-content .md-ol {
+  list-style-type: decimal;
+}
+
+.md-content .md-li,
+.md-content .md-oli {
+  margin: 0.15rem 0;
+  line-height: 1.5;
+}
