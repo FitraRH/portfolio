@@ -156,8 +156,8 @@ function MarkdownRenderer({ content }) {
     // Code blocks: \`\`\`lang\n...\n\`\`\` (with or without newline after \`\`\`)
     text = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
       const escaped = code.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
-      const langLabel = lang ? \`<span class="md-code-lang">\${lang}</span>\` : '';
-      return \`<div class="md-codeblock-wrapper">\${langLabel}<pre class="md-codeblock"><code>\${escaped}</code></pre></div>\`;
+      const langLabel = lang ? `<span class="md-code-lang">${lang}</span>` : '';
+      return `<div class="md-codeblock-wrapper">${langLabel}<pre class="md-codeblock"><code>${escaped}</code></pre></div>`;
     });
 
     // Inline code: \`...\`
@@ -176,11 +176,11 @@ function MarkdownRenderer({ content }) {
 
     // Unordered lists: - item or * item
     text = text.replace(/^[\-\*] (.+)$/gm, '<li class="md-li">$1</li>');
-    text = text.replace(/(<li class="md-li">.*<\/li>\n?)+/g, (match) => \`<ul class="md-ul">\${match}</ul>\`);
+    text = text.replace(/(<li class="md-li">.*<\/li>\n?)+/g, (match) => `<ul class="md-ul">${match}</ul>`);
 
     // Numbered lists: 1. item
     text = text.replace(/^\d+\. (.+)$/gm, '<li class="md-oli">$1</li>');
-    text = text.replace(/(<li class="md-oli">.*<\/li>\n?)+/g, (match) => \`<ol class="md-ol">\${match}</ol>\`);
+    text = text.replace(/(<li class="md-oli">.*<\/li>\n?)+/g, (match) => `<ol class="md-ol">${match}</ol>`);
 
     // Line breaks
     text = text.replace(/\n/g, '<br/>');
@@ -211,9 +211,9 @@ const AI_FEATURES = [
     model: 'llama-3.1-8b-instant',
     sysPrompt: CHAT_PROMPT,
     placeholder: 'Ask me anything about Fitra...',
-    description: 'General AI assistant — ask about Fitra\\'s background, skills, and projects.',
+    description: 'General AI assistant — ask about Fitra\'s background, skills, and projects.',
     suggestions: [
-      'What are Fitra\\'s main skills?',
+      'What are Fitra\'s main skills?',
       'Tell me about his work experience',
       'What projects has Fitra built?',
     ],
@@ -230,9 +230,9 @@ const AI_FEATURES = [
     model: 'mistral-small-latest',
     sysPrompt: RESUME_PROMPT,
     placeholder: 'Ask about resume analysis...',
-    description: 'Analyzes Fitra\\'s qualifications, skills gap, and career trajectory.',
+    description: 'Analyzes Fitra\'s qualifications, skills gap, and career trajectory.',
     suggestions: [
-      'Analyze Fitra\\'s resume strengths',
+      'Analyze Fitra\'s resume strengths',
       'How does his profile compare to industry standards?',
       'What career path would you suggest?',
     ],
@@ -302,7 +302,7 @@ function ChatPanel({ feature }) {
       setMessages((prev) => [
         ...prev,
         { id: genId(), role: 'user', content: userText },
-        { id: genId(), role: 'assistant', content: \`⚠️ **API Key is missing or invalid.**\\n\\nPlease configure your API key for \${feature.modelName} to use the AI Lab on GitHub Pages.\` }
+        { id: genId(), role: 'assistant', content: `⚠️ **API Key is missing or invalid.**\n\nPlease configure your API key for ${feature.modelName} to use the AI Lab on GitHub Pages.` }
       ]);
       return;
     }
@@ -327,7 +327,7 @@ function ChatPanel({ feature }) {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': \`Bearer \${feature.key}\`
+          'Authorization': `Bearer ${feature.key}`
         },
         body: JSON.stringify({
           model: feature.model,
@@ -339,7 +339,7 @@ function ChatPanel({ feature }) {
 
       if (!res.ok) {
         const errText = await res.text();
-        throw new Error(\`API error \${res.status}: \${errText}\`);
+        throw new Error(`API error ${res.status}: ${errText}`);
       }
 
       setMessages((prev) => [
@@ -384,7 +384,7 @@ function ChatPanel({ feature }) {
         {
           id: assistantId,
           role: 'assistant',
-          content: \`⚠️ Error: \${error.message || 'Failed to get response. Please try again.'}\`,
+          content: `⚠️ Error: ${error.message || 'Failed to get response. Please try again.'}`,
         },
       ]);
     } finally {
@@ -448,13 +448,13 @@ function ChatPanel({ feature }) {
           </div>
         ) : (
           messages.map((msg) => (
-            <div key={msg.id} className={\`flex \${msg.role === 'user' ? 'justify-end' : 'justify-start'}\`}>
+            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={\`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed \${
+                className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                   msg.role === 'user'
                     ? 'bg-gradient-to-r from-[#2563eb] to-[#7c3aed] text-white rounded-br-md'
                     : 'bg-[rgba(15,31,58,0.8)] border border-[var(--color-glass-border)] text-[var(--color-text-primary)] rounded-bl-md'
-                }\`}
+                }`}
               >
                 <MarkdownRenderer content={msg.content} />
                 {msg.role === 'assistant' && msg.content && !msg.content.includes('Error:') && (
@@ -483,9 +483,9 @@ function ChatPanel({ feature }) {
 
       {/* Input Area */}
       <div className="border-t border-[rgba(37,99,235,0.1)] p-4">
-        <form id={\`form-\${feature.id}\`} onSubmit={onSubmit} className="flex gap-2">
+        <form id={`form-${feature.id}`} onSubmit={onSubmit} className="flex gap-2">
           <input
-            name={\`input-\${feature.id}\`}
+            name={`input-${feature.id}`}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={feature.placeholder}
@@ -556,11 +556,11 @@ export default function AILab() {
                 <button
                   key={feature.id}
                   onClick={() => setActiveTab(feature.id)}
-                  className={\`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-4 text-sm font-medium transition-all duration-300 cursor-pointer relative \${
+                  className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-4 text-sm font-medium transition-all duration-300 cursor-pointer relative ${
                     activeTab === feature.id
                       ? 'text-[var(--color-text-primary)] bg-[rgba(37,99,235,0.08)]'
                       : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] hover:bg-[rgba(37,99,235,0.04)]'
-                  }\`}
+                  }`}
                 >
                   <span className="text-lg">{feature.icon}</span>
                   <span className="hidden sm:inline">{feature.label}</span>
