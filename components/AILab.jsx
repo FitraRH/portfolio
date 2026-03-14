@@ -4,21 +4,164 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ScrollReveal from './ScrollReveal';
 
+// --- API KEYS FOR GITHUB PAGES (STATIC EXPORT) ---
+// WARNING: These keys will be visible in the client bundle.
+// They are required because GitHub Pages cannot run server-side route handlers.
+const GROQ_API_KEY = process.env.NEXT_PUBLIC_GROQ_API_KEY || 'gsk_x'; // User will need to replace this or we hardcode it
+const MISTRAL_API_KEY = process.env.NEXT_PUBLIC_MISTRAL_API_KEY || 'mx_';
+const DEEPSEEK_API_KEY = process.env.NEXT_PUBLIC_DEEPSEEK_API_KEY || 'sk-';
+
+// Common System Prompts
+const CHAT_PROMPT = `IMPORTANT: Detect the language of the user's message. Reply ONLY in that exact language. English question = English answer. Indonesian question = Indonesian answer. NEVER mix languages. NEVER switch language.
+
+You are "Fitra AI", a friendly AI assistant on Fitra Ramdhan Hafidz's portfolio website.
+
+FORMAT RULES:
+- Use markdown formatting in your responses
+- Use **bold** for emphasis and key terms
+- Use bullet points (- item) for lists
+- Use numbered lists (1. item) for steps
+- Use ### for section headers
+- Keep paragraphs short (2-3 sentences max)
+- Add blank lines between sections for readability
+
+About Fitra:
+- AI Engineer specializing in Computer Vision and Generative AI
+- Experienced with Python, PyTorch, Flask, Docker, YOLOv8, HRNet, LangChain, GPT-4
+- Worked at Solos AI Consulting (Qatar), Elice NIPA Korea ASEAN Academy, PT Solusi Intek Indonesia
+- B.IT Computer Science (AI) from President University, GPA 3.78/4.00, Graduated with Honors in 3 years
+- IELTS 7.5, Rank 3 Jababeka Scholar
+- Key projects: VisDrone Traffic Analysis, Deftection (Manufacturing Defect Detection), AI Chatbot with RAG, MindVerse AI Platform
+- Certifications include HuggingFace Fundamentals of LLMs and Fine-Tune LLM
+
+You should:
+- Answer questions about Fitra's background, skills, projects, and experience
+- Be conversational, professional, and showcase Fitra's capabilities
+- If asked about things unrelated to Fitra, you can still help but gently guide back to his expertise
+- Keep responses concise and engaging`;
+
+const RESUME_PROMPT = `IMPORTANT: Detect the language of the user's message. Reply ONLY in that exact language. English question = English answer. Indonesian question = Indonesian answer. NEVER mix languages. NEVER switch language.
+
+FORMAT RULES:
+- Use markdown formatting in your responses
+- Use **bold** for emphasis and key terms
+- Use bullet points (- item) for lists
+- Use numbered lists (1. item) for steps
+- Use ### for section headers
+- Keep paragraphs short (2-3 sentences max)
+- Add blank lines between sections for readability
+
+You are a professional Resume Analyzer AI powered by Mistral AI. You are embedded in Fitra Ramdhan Hafidz's portfolio website.
+
+Fitra's Resume Summary:
+- Name: Fitra Ramdhan Hafidz
+- Role: AI Engineer (Computer Vision & Generative AI)
+- Education: B.IT Computer Science (AI), President University, GPA 3.78/4.00, Graduated with Honors in 3 years
+- IELTS: 7.5 | Jababeka Scholar Rank 3
+
+Work Experience:
+1. Solos AI Consulting, Doha Qatar (Jan–Aug 2025) — AI Engineer
+   - Manufacturing defect detection pipeline (HRNet, Anomalib PatchCore, 50-100ms inference)
+   - GPT-4 integration for quality control analysis
+2. Elice NIPA Korea ASEAN Academy (Jun–Aug 2025) — Apprenticeship
+   - Bilingual GPT-4 chatbot with MongoDB, Node.js-Python bridge
+   - Automated meeting analysis workflows
+3. PT Solusi Intek Indonesia (Sep 2024–May 2025) — Data Science Intern
+   - Multi-camera CV system (YOLOv8, HRNet, 20-30 FPS)
+   - RESTful APIs and monitoring dashboards
+
+Key Skills: Python, PyTorch, Flask, FastAPI, Docker, YOLOv8, HRNet, LangChain, RAG, GPT-4, MongoDB, PostgreSQL, AWS
+
+Certifications: HuggingFace Fundamentals of LLMs, HuggingFace Fine-Tune LLM, IELTS 7.5, Korea-ASEAN Digital Academy
+
+Your tasks:
+- Analyze and provide insights about Fitra's resume/qualifications
+- Compare his skills with industry standards
+- Suggest improvements or highlight strengths
+- Answer questions about his career trajectory
+- Provide structured analysis (use bullet points, sections)`;
+
+const CODE_PROMPT = `IMPORTANT: Detect the language of the user's message. Reply ONLY in that exact language. English question = English answer. Indonesian question = Indonesian answer. NEVER mix languages. NEVER switch language. Note: code syntax stays in English but all explanations must match the user's language.
+
+FORMAT RULES:
+- Use markdown formatting in your responses
+- Use **bold** for emphasis and key terms
+- Use bullet points (- item) for lists
+- Use numbered lists (1. item) for steps
+- Use ### for section headers
+- Wrap code in triple backticks with language name, e.g. \`\`\`python
+- Keep paragraphs short (2-3 sentences max)
+- Add blank lines between sections for readability
+
+You are a Code Explainer AI powered by Groq (running Llama 3.3). You are embedded in Fitra Ramdhan Hafidz's AI Engineer portfolio.
+
+Your specialty is explaining code clearly and concisely. You excel at:
+- Explaining code snippets in simple terms
+- Breaking down algorithms step by step
+- Suggesting code improvements and best practices
+- Explaining AI/ML code (PyTorch, TensorFlow, etc.)
+- Showing code examples with comments
+
+Context - Fitra's tech stack:
+- Languages: Python, JavaScript, SQL
+- ML/AI: PyTorch, TensorFlow, YOLOv8, HRNet, Anomalib, LangChain
+- Backend: Flask, FastAPI, Node.js, Express.js
+- Databases: PostgreSQL, MongoDB, SQLite, ChromaDB
+- DevOps: Docker, Git, AWS
+
+When explaining code:
+- Use clear, beginner-friendly language
+- Add inline comments to code
+- Use analogies when helpful
+- Keep explanations concise but thorough`;
+
+const REASONING_PROMPT = `IMPORTANT: Detect the language of the user's message. Reply ONLY in that exact language. English question = English answer. Indonesian question = Indonesian answer. NEVER mix languages. NEVER switch language.
+
+FORMAT RULES:
+- Use markdown formatting in your responses
+- Use **bold** for emphasis and key terms
+- Use bullet points (- item) for lists
+- Use numbered lists (1. item) for steps or reasoning chains
+- Use ### for section headers
+- Keep paragraphs short (2-3 sentences max)
+- Add blank lines between sections for readability
+
+You are a Deep Reasoning AI powered by DeepSeek. You are embedded in Fitra Ramdhan Hafidz's AI Engineer portfolio.
+
+Your specialty is deep analytical thinking and step-by-step reasoning. You excel at:
+- Breaking down complex AI/ML problems into clear steps
+- Analyzing system architectures and suggesting optimizations
+- Explaining mathematical concepts behind ML algorithms
+- Comparing different approaches with pros and cons
+- Providing thorough, well-structured analysis
+
+Context about the portfolio owner:
+- Fitra is an AI Engineer specializing in Computer Vision and Generative AI
+- He works with PyTorch, YOLOv8, HRNet, Anomalib, LangChain, GPT-4
+- His projects involve real-time inference, defect detection, and RAG systems
+
+When answering:
+- Use step-by-step reasoning (numbered steps)
+- Show your thinking process
+- Provide concrete examples when relevant
+- Be thorough but organized`;
+
+
 // Lightweight markdown renderer — no external deps needed
 function MarkdownRenderer({ content }) {
   const html = useMemo(() => {
     if (!content) return '';
     let text = content;
 
-    // Code blocks: ```lang\n...\n``` (with or without newline after ```)
+    // Code blocks: \`\`\`lang\n...\n\`\`\` (with or without newline after \`\`\`)
     text = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
       const escaped = code.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
-      const langLabel = lang ? `<span class="md-code-lang">${lang}</span>` : '';
-      return `<div class="md-codeblock-wrapper">${langLabel}<pre class="md-codeblock"><code>${escaped}</code></pre></div>`;
+      const langLabel = lang ? \`<span class="md-code-lang">\${lang}</span>\` : '';
+      return \`<div class="md-codeblock-wrapper">\${langLabel}<pre class="md-codeblock"><code>\${escaped}</code></pre></div>\`;
     });
 
-    // Inline code: `...`
-    text = text.replace(/`([^`]+)`/g, '<code class="md-inline-code">$1</code>');
+    // Inline code: \`...\`
+    text = text.replace(/\`([^\`]+)\`/g, '<code class="md-inline-code">$1</code>');
 
     // Bold: **...**
     text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -33,11 +176,11 @@ function MarkdownRenderer({ content }) {
 
     // Unordered lists: - item or * item
     text = text.replace(/^[\-\*] (.+)$/gm, '<li class="md-li">$1</li>');
-    text = text.replace(/(<li class="md-li">.*<\/li>\n?)+/g, (match) => `<ul class="md-ul">${match}</ul>`);
+    text = text.replace(/(<li class="md-li">.*<\/li>\n?)+/g, (match) => \`<ul class="md-ul">\${match}</ul>\`);
 
     // Numbered lists: 1. item
     text = text.replace(/^\d+\. (.+)$/gm, '<li class="md-oli">$1</li>');
-    text = text.replace(/(<li class="md-oli">.*<\/li>\n?)+/g, (match) => `<ol class="md-ol">${match}</ol>`);
+    text = text.replace(/(<li class="md-oli">.*<\/li>\n?)+/g, (match) => \`<ol class="md-ol">\${match}</ol>\`);
 
     // Line breaks
     text = text.replace(/\n/g, '<br/>');
@@ -60,14 +203,17 @@ const AI_FEATURES = [
     id: 'chat',
     label: 'AI Chat',
     icon: '💬',
-    model: 'Llama 3.1 8B (Groq)',
+    modelName: 'Llama 3.1 8B (Groq)',
     flag: '🇺🇸',
     color: '#4285f4',
-    endpoint: '/api/chat',
+    url: 'https://api.groq.com/openai/v1/chat/completions',
+    key: GROQ_API_KEY,
+    model: 'llama-3.1-8b-instant',
+    sysPrompt: CHAT_PROMPT,
     placeholder: 'Ask me anything about Fitra...',
-    description: 'General AI assistant — ask about Fitra\'s background, skills, and projects.',
+    description: 'General AI assistant — ask about Fitra\\'s background, skills, and projects.',
     suggestions: [
-      'What are Fitra\'s main skills?',
+      'What are Fitra\\'s main skills?',
       'Tell me about his work experience',
       'What projects has Fitra built?',
     ],
@@ -76,14 +222,17 @@ const AI_FEATURES = [
     id: 'resume',
     label: 'Resume Analyzer',
     icon: '📝',
-    model: 'Mistral Small',
+    modelName: 'Mistral Small',
     flag: '🇫🇷',
     color: '#ff7000',
-    endpoint: '/api/resume',
+    url: 'https://api.mistral.ai/v1/chat/completions',
+    key: MISTRAL_API_KEY,
+    model: 'mistral-small-latest',
+    sysPrompt: RESUME_PROMPT,
     placeholder: 'Ask about resume analysis...',
-    description: 'Analyzes Fitra\'s qualifications, skills gap, and career trajectory.',
+    description: 'Analyzes Fitra\\'s qualifications, skills gap, and career trajectory.',
     suggestions: [
-      'Analyze Fitra\'s resume strengths',
+      'Analyze Fitra\\'s resume strengths',
       'How does his profile compare to industry standards?',
       'What career path would you suggest?',
     ],
@@ -92,10 +241,13 @@ const AI_FEATURES = [
     id: 'code',
     label: 'Code Explainer',
     icon: '💻',
-    model: 'Llama 3.3 70B (Groq)',
+    modelName: 'Llama 3.3 70B (Groq)',
     flag: '🇺🇸',
     color: '#f55036',
-    endpoint: '/api/code',
+    url: 'https://api.groq.com/openai/v1/chat/completions',
+    key: GROQ_API_KEY,
+    model: 'llama-3.3-70b-versatile',
+    sysPrompt: CODE_PROMPT,
     placeholder: 'Paste code or ask about coding...',
     description: 'Explains code, algorithms, and AI/ML concepts with lightning speed.',
     suggestions: [
@@ -108,10 +260,13 @@ const AI_FEATURES = [
     id: 'reasoning',
     label: 'Deep Reasoning',
     icon: '🔍',
-    model: 'DeepSeek V3',
+    modelName: 'DeepSeek V3',
     flag: '🇨🇳',
     color: '#536dfe',
-    endpoint: '/api/reasoning',
+    url: 'https://api.deepseek.com/v1/chat/completions',
+    key: DEEPSEEK_API_KEY,
+    model: 'deepseek-chat',
+    sysPrompt: REASONING_PROMPT,
     placeholder: 'Ask complex AI questions...',
     description: 'Deep analytical thinking for complex AI/ML problems and system design.',
     suggestions: [
@@ -143,53 +298,83 @@ function ChatPanel({ feature }) {
   const sendMessage = useCallback(async (userText) => {
     if (!userText.trim() || isLoading) return;
 
+    if (!feature.key || feature.key.includes('your_') || feature.key.length < 10) {
+      setMessages((prev) => [
+        ...prev,
+        { id: genId(), role: 'user', content: userText },
+        { id: genId(), role: 'assistant', content: \`⚠️ **API Key is missing or invalid.**\\n\\nPlease configure your API key for \${feature.modelName} to use the AI Lab on GitHub Pages.\` }
+      ]);
+      return;
+    }
+
     const userMsg = { id: genId(), role: 'user', content: userText };
     const assistantId = genId();
 
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
 
-    const allMessages = [...messages, { role: 'user', content: userText }];
+    const apiMessages = [
+      { role: 'system', content: feature.sysPrompt },
+      ...messages.map(m => ({ role: m.role, content: m.content })),
+      { role: 'user', content: userText }
+    ];
 
     try {
       const controller = new AbortController();
       abortRef.current = controller;
 
-      const res = await fetch(feature.endpoint, {
+      const res = await fetch(feature.url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': \`Bearer \${feature.key}\`
+        },
         body: JSON.stringify({
-          messages: allMessages.map((m) => ({ role: m.role, content: m.content })),
+          model: feature.model,
+          messages: apiMessages,
+          stream: true,
         }),
         signal: controller.signal,
       });
 
       if (!res.ok) {
         const errText = await res.text();
-        throw new Error(`API error ${res.status}: ${errText}`);
+        throw new Error(\`API error \${res.status}: \${errText}\`);
       }
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let accumulated = '';
-
-      // Add empty assistant message
       setMessages((prev) => [
         ...prev,
         { id: assistantId, role: 'assistant', content: '' },
       ]);
 
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = '';
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        accumulated += decoder.decode(value, { stream: true });
-
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantId ? { ...msg, content: accumulated } : msg
-          )
-        );
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+            try {
+              const data = JSON.parse(line.slice(6));
+              const text = data.choices[0]?.delta?.content || '';
+              accumulated += text;
+              
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === assistantId ? { ...msg, content: accumulated } : msg
+                )
+              );
+            } catch (e) {
+              // Ignore parse errors on partial stream chunks
+            }
+          }
+        }
       }
     } catch (error) {
       if (error.name === 'AbortError') return;
@@ -199,14 +384,14 @@ function ChatPanel({ feature }) {
         {
           id: assistantId,
           role: 'assistant',
-          content: `⚠️ Error: ${error.message || 'Failed to get response. Please try again.'}`,
+          content: \`⚠️ Error: \${error.message || 'Failed to get response. Please try again.'}\`,
         },
       ]);
     } finally {
       setIsLoading(false);
       abortRef.current = null;
     }
-  }, [messages, isLoading, feature.endpoint]);
+  }, [messages, isLoading, feature]);
 
   const handleSuggestion = (suggestion) => {
     sendMessage(suggestion);
@@ -246,7 +431,7 @@ function ChatPanel({ feature }) {
               </p>
               <div className="flex items-center justify-center gap-2 text-xs text-[var(--color-text-tertiary)] mb-6">
                 <span>Powered by</span>
-                <span className="font-semibold text-[var(--color-text-secondary)]">{feature.flag} {feature.model}</span>
+                <span className="font-semibold text-[var(--color-text-secondary)]">{feature.flag} {feature.modelName}</span>
               </div>
             </div>
             <div className="flex flex-col gap-2 w-full max-w-[360px]">
@@ -263,19 +448,19 @@ function ChatPanel({ feature }) {
           </div>
         ) : (
           messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div key={msg.id} className={\`flex \${msg.role === 'user' ? 'justify-end' : 'justify-start'}\`}>
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                className={\`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed \${
                   msg.role === 'user'
                     ? 'bg-gradient-to-r from-[#2563eb] to-[#7c3aed] text-white rounded-br-md'
                     : 'bg-[rgba(15,31,58,0.8)] border border-[var(--color-glass-border)] text-[var(--color-text-primary)] rounded-bl-md'
-                }`}
+                }\`}
               >
                 <MarkdownRenderer content={msg.content} />
-                {msg.role === 'assistant' && msg.content && (
+                {msg.role === 'assistant' && msg.content && !msg.content.includes('Error:') && (
                   <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-[rgba(37,99,235,0.1)]">
                     <span className="text-[0.65rem] text-[var(--color-text-tertiary)]">
-                      {feature.flag} {feature.model}
+                      {feature.flag} {feature.modelName}
                     </span>
                   </div>
                 )}
@@ -298,9 +483,9 @@ function ChatPanel({ feature }) {
 
       {/* Input Area */}
       <div className="border-t border-[rgba(37,99,235,0.1)] p-4">
-        <form id={`form-${feature.id}`} onSubmit={onSubmit} className="flex gap-2">
+        <form id={\`form-\${feature.id}\`} onSubmit={onSubmit} className="flex gap-2">
           <input
-            name={`input-${feature.id}`}
+            name={\`input-\${feature.id}\`}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={feature.placeholder}
@@ -358,7 +543,7 @@ export default function AILab() {
             </h2>
             <p className="text-base text-[var(--color-text-secondary)] mt-3 max-w-[600px]">
               Explore 4 different AI models from 3 countries, each specialized for a unique task.
-              Built with Vercel AI SDK.
+              (Running in Static Client Mode).
             </p>
           </div>
         </ScrollReveal>
@@ -371,11 +556,11 @@ export default function AILab() {
                 <button
                   key={feature.id}
                   onClick={() => setActiveTab(feature.id)}
-                  className={`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-4 text-sm font-medium transition-all duration-300 cursor-pointer relative ${
+                  className={\`flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-4 text-sm font-medium transition-all duration-300 cursor-pointer relative \${
                     activeTab === feature.id
                       ? 'text-[var(--color-text-primary)] bg-[rgba(37,99,235,0.08)]'
                       : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] hover:bg-[rgba(37,99,235,0.04)]'
-                  }`}
+                  }\`}
                 >
                   <span className="text-lg">{feature.icon}</span>
                   <span className="hidden sm:inline">{feature.label}</span>
@@ -396,7 +581,7 @@ export default function AILab() {
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 bg-[#34d399] rounded-full" style={{ animation: 'pulse-dot 2s ease-in-out infinite' }} />
                 <span className="text-xs text-[var(--color-text-tertiary)]">
-                  {activeFeature.flag} <span className="font-semibold text-[var(--color-text-secondary)]">{activeFeature.model}</span>
+                  {activeFeature.flag} <span className="font-semibold text-[var(--color-text-secondary)]">{activeFeature.modelName}</span>
                 </span>
               </div>
               <span className="text-[0.65rem] px-2 py-0.5 rounded-full bg-[rgba(37,99,235,0.1)] text-[var(--color-accent-secondary)] font-medium">
